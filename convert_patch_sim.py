@@ -4,6 +4,16 @@ import json
 from collections import defaultdict
 import cv2
 
+type_to_name = {
+    1: "OTHER",
+    2: "INFLAMMATORY",
+    3: "HEALTHY_EPITHELIAL",
+    4: "DYSPLASTIC/MALIGNANT",
+    5: "FIBROBLAST",
+    6: "MUSCLE",
+    7: "ENDOTHELIAL",
+}
+
 def get_class_colors():
     """Return color map for each nucleus class."""
     colors = {
@@ -172,20 +182,29 @@ def convert_to_hexagonal_system(cells, img_shape, hex_size, output_prefix):
     
     # Create CELLS data
     cells_data = []
-    
+
     for (u, v, w), cell_list in hex_cells.items():
-        for cell in cell_list:
+        for cell in cell_list:            
             cells_data.append({
                 "id": cell['id'],
-                "state": cell['type'],
+                "parent": 0,
+                "pop": 1,  # Using nucleus type as population
+                "age": 0,
+                "divisions": 50,
+                "state": type_to_name[cell['type']],
+                "volume": float(cell['area']),  # Using area as volume
+                "height": 8.7,  # Default height (you can adjust this)
+                "criticals": [float(cell['area']), 13.78],
+                "cycles": []
             })
     
+
     # Sort by ID
     cells_data.sort(key=lambda x: x['id'])
     
     # Save to JSON files
-    locations_file = f"{output_prefix}_LOCATIONS.json"
-    cells_file = f"{output_prefix}_CELLS.json"
+    locations_file = f"train_0000_000000.LOCATIONS.json"
+    cells_file = f"train_0000_000000.CELLS.json"
     
     with open(locations_file, 'w') as f:
         f.write('[\n')
@@ -277,8 +296,8 @@ def visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center,
     
     if output_path:
         plt.savefig(output_path, dpi=150, bbox_inches='tight', transparent=True)
-    #else:
-    plt.show()
+    else:
+        plt.show()
     plt.close()
 
 # Main conversion function
