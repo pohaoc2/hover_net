@@ -285,7 +285,7 @@ class InferManager(base.InferManager):
             dataset = SerializeFileList(
                 cache_image_list, cache_patch_info_list, self.patch_input_shape
             )
-
+            self.batch_size = 16
             dataloader = data.DataLoader(
                 dataset,
                 num_workers=self.nr_inference_workers,

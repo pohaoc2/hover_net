@@ -88,8 +88,10 @@ class TrainManager(Config):
             # convert from Tensor to Numpy
             batch_data = {k: v.numpy() for k, v in batch_data.items()}
             viz = prep_func(batch_data, is_batch=True, **prep_kwargs)
+            
             plt.imshow(viz)
-            plt.show()
+            #plt.show()
+            #plt.savefig("viz_%s.png" % mode)
         self.nr_gpus = -1
         return
 

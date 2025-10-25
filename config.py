@@ -49,10 +49,10 @@ class Config(object):
 
         # paths to training and validation patches
         self.train_dir_list = [
-            "train_patches_path"
+            "./dataset/training_data/consep/consep/train/540x540_164x164/"
         ]
         self.valid_dir_list = [
-            "valid_patches_path"
+            "./dataset/training_data/consep/consep/valid/540x540_164x164/"
         ]
 
         self.shape_info = {
