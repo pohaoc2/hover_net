@@ -77,12 +77,6 @@ if __name__ == "__main__":
                 "%s/%s%s" % (ann_dir, base_name, ann_ext), type_classification
             )
             print("%s/%s%s" % (ann_dir, base_name, ann_ext))
-            print(f"ann = {ann.shape}")
-            print(f"ann min = {ann[..., 0].min()}")
-            print(f"ann max = {ann[..., 0].max()}")
-            print(f"ann unique values = {np.unique(ann[..., 1])}")
-            print(f"ann min = {ann[..., 1].min()}")
-            print(f"ann max = {ann[..., 1].max()}")
             # *
             img = np.concatenate([img, ann], axis=-1)
             sub_patches = xtractor.extract(img, extract_type)
@@ -103,5 +97,4 @@ if __name__ == "__main__":
             # *
 
             pbarx.update()
-            break
         pbarx.close()

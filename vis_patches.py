@@ -2,6 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 from scipy import ndimage
+import glob
+import os
+import re
 
 def get_class_colors():
     """Return color map for each nucleus class."""
@@ -71,15 +74,24 @@ def visualize_patch_with_overlay(npy_path, contour_thickness=2, figsize=(16, 8),
         
         # Calculate centroid
         M = cv2.moments(contours[0])
-        if M["m00"] != 0:
-            cx = int(M["m10"] / M["m00"])
-            cy = int(M["m01"] / M["m00"])
-            centroids.append((cx, cy, nucleus_type))
-            
-            # Draw centroid
-            cv2.circle(overlay, (cx, cy), 3, color, -1)
-            cv2.circle(overlay, (cx, cy), 4, (255, 255, 255), 1)  # White outline
-    
+        if len(contours) > 1:
+            for contour in contours:
+                M = cv2.moments(contour)
+                if M["m00"] != 0:
+                    cx = int(M["m10"] / M["m00"])
+                    cy = int(M["m01"] / M["m00"])
+                    centroids.append((cx, cy, nucleus_type))
+                    cv2.circle(overlay, (cx, cy), 3, color, -1)
+                    cv2.circle(overlay, (cx, cy), 4, (255, 255, 255), 1)  # White outline
+        else:
+            if M["m00"] != 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+                centroids.append((cx, cy, nucleus_type))
+                
+                # Draw centroid
+                cv2.circle(overlay, (cx, cy), 3, color, -1)
+                cv2.circle(overlay, (cx, cy), 4, (255, 255, 255), 1)  # White outline
     # Create figure with subplots
     fig, axes = plt.subplots(1, 2, figsize=figsize)
     
@@ -192,14 +204,38 @@ def visualize_multiple_patches_with_overlay(patch_dir, num_samples=4, contour_th
 
 # Example usage:
 if __name__ == "__main__":
-    # Visualize a single patch
-    for index in range(14,16):
-        patch_path = "dataset/training_data/consep/consep/train/540x540_164x164/train_1_{:03d}.npy".format(index)
-        centroids = visualize_patch_with_overlay(patch_path,
-        contour_thickness=2,
-        save_path="dataset/training_data/consep/consep/train/540x540_164x164/train_1_{:03d}_visualization.png".format(index))
-    asd()
+    # Visualize all patches in the folder
     path_dir = "dataset/training_data/consep/consep/train/540x540_164x164/"
+    
+    # Get all .npy files matching the pattern train_*_*.npy
+    npy_files = glob.glob(os.path.join(path_dir, "train_*_*.npy"))
+    
+    # Sort files by idx first, then by number (train_{idx}_{number}.npy)
+    def extract_sort_key(filename):
+        match = re.search(r'train_(\d+)_(\d+)\.npy', os.path.basename(filename))
+        if match:
+            idx = int(match.group(1))
+            number = int(match.group(2))
+            return (idx, number)
+        return (0, 0)
+    
+    npy_files.sort(key=extract_sort_key)
+    
+    print(f"Found {len(npy_files)} .npy files to process")
+    
+    # Iterate over all .npy files
+    for patch_path in npy_files:
+        # Extract the base filename without extension
+        base_name = os.path.splitext(os.path.basename(patch_path))[0]
+        save_path = os.path.join(path_dir, f"{base_name}_visualization.png")
+        
+        print(f"Processing: {os.path.basename(patch_path)}")
+        
+        centroids = visualize_patch_with_overlay(
+            patch_path,
+            contour_thickness=2,
+            save_path=save_path
+        )
     visualize_multiple_patches_with_overlay(
         path_dir, 
         num_samples=2, 

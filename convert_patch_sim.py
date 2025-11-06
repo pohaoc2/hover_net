@@ -3,7 +3,9 @@ import matplotlib.pyplot as plt
 import json
 from collections import defaultdict
 import cv2
-
+import glob
+import os
+import re
 type_to_name = {
     1: "OTHER",
     2: "INFLAMMATORY",
@@ -46,7 +48,7 @@ def extract_centroids_from_patch(npy_path):
     nucleus_ids = nucleus_ids[nucleus_ids != 0]
     
     cells = []
-    
+    mirror_cell_count = 0
     for nucleus_id in nucleus_ids:
         mask = (inst_map == nucleus_id).astype(np.uint8)
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -59,22 +61,48 @@ def extract_centroids_from_patch(npy_path):
         nucleus_type = np.bincount(nucleus_pixels).argmax()
         
         # Calculate centroid
-        M = cv2.moments(contours[0])
-        if M["m00"] != 0:
-            cx = M["m10"] / M["m00"]
-            cy = M["m01"] / M["m00"]
-            
-            # Calculate area (volume in 2D)
-            area = cv2.contourArea(contours[0])
-            
-            cells.append({
-                'id': int(nucleus_id),
-                'x': cx,
-                'y': cy,
-                'type': int(nucleus_type),
-                'area': area
-            })
-    
+        try:
+            if len(contours) > 1:
+                for contour in contours:
+                    mirror_cell_count += 1
+                    M = cv2.moments(contour)
+                    if M["m00"] != 0:
+                        cx = int(M["m10"] / M["m00"])
+                        cy = int(M["m01"] / M["m00"])
+
+                    area = cv2.contourArea(contour)
+                    cells.append({
+                        'id': len(nucleus_ids) + mirror_cell_count,
+                        'x': cx,
+                        'y': cy,
+                        'type': int(nucleus_type),
+                        'area': area
+                    })
+            else:
+                M = cv2.moments(contours[0])
+                if M["m00"] != 0:
+                    cx = M["m10"] / M["m00"]
+                    cy = M["m01"] / M["m00"]
+                    
+                    # Calculate area (volume in 2D)
+                    area = cv2.contourArea(contours[0])
+                    
+                    cells.append({
+                        'id': int(nucleus_id),
+                        'x': cx,
+                        'y': cy,
+                        'type': int(nucleus_type),
+                        'area': area
+                    })
+        except Exception as e:
+            print(f"Error extracting centroids from patch: {e}")
+            print(f"Nucleus ID: {nucleus_id}")
+            print(f"Contours: {contours}")
+            print(f"Nucleus type: {nucleus_type}")
+            print(f"Nucleus pixels: {nucleus_pixels}")
+            print(f"Nucleus mask: {mask}")
+            print(f"Nucleus inst_map: {inst_map}")
+            print(f"Nucleus type_map: {type_map}")
     return cells, img
 
 def xy_to_hex(x, y, hex_size, center_x, center_y):
@@ -145,7 +173,7 @@ def hex_to_xy(u, v, w, hex_size, center_x, center_y):
     
     return x, y
 
-def convert_to_hexagonal_system(cells, img_shape, hex_size, output_prefix):
+def convert_to_hexagonal_system(cells, img_shape, hex_size, idx, number, save_dir):
     """
     Convert cells to hexagonal coordinate system and save output files.
     
@@ -203,8 +231,8 @@ def convert_to_hexagonal_system(cells, img_shape, hex_size, output_prefix):
     cells_data.sort(key=lambda x: x['id'])
     
     # Save to JSON files
-    locations_file = f"train_0000_000000.LOCATIONS.json"
-    cells_file = f"train_0000_000000.CELLS.json"
+    locations_file = f"{save_dir}train_{idx}_{number}_0000_000000.LOCATIONS.json"
+    cells_file = f"{save_dir}train_{idx}_{number}_0000_000000.CELLS.json"
     
     with open(locations_file, 'w') as f:
         f.write('[\n')
@@ -301,7 +329,7 @@ def visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center,
     plt.close()
 
 # Main conversion function
-def convert_patch_to_hexagonal(npy_path, hex_size, output_prefix=None):
+def convert_patch_to_hexagonal(npy_path, hex_size, idx, number, save_dir):
     """
     Main function to convert a patch from Cartesian to hexagonal system.
     
@@ -313,9 +341,6 @@ def convert_patch_to_hexagonal(npy_path, hex_size, output_prefix=None):
     Returns:
         cells, locations_data, cells_data
     """
-    if output_prefix is None:
-        output_prefix = npy_path.replace('.npy', '')
-    
     print(f"Processing: {npy_path}")
     print(f"Hexagon size: {hex_size} pixels")
     print("-" * 60)
@@ -326,20 +351,45 @@ def convert_patch_to_hexagonal(npy_path, hex_size, output_prefix=None):
     
     # Convert to hexagonal system
     locations_data, cells_data, center = convert_to_hexagonal_system(
-        cells, img.shape, hex_size, output_prefix
+        cells, img.shape, hex_size, idx, number, save_dir   
     )
     
     # Visualize
     visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center,
-                                   output_path=f"{output_prefix}_hexagonal_visualization.png")
+                                   output_path=f"{save_dir}train_{idx}_{number}_hexagonal_visualization.png")
     
     return cells, locations_data, cells_data
 
 
 # Example usage
 if __name__ == "__main__":
-    # Example: Convert a single patch
-    npy_path = "dataset/training_data/consep/consep/train/540x540_164x164/train_1_014.npy"
-    hex_size = 20  # Adjust this based on typical cell spacing
+    path_dir = "dataset/training_data/consep/consep/train/540x540_164x164/"
     
-    cells, locations, cells_json = convert_patch_to_hexagonal(npy_path, hex_size)
+    # Get all .npy files matching the pattern train_*_*.npy
+    npy_files = glob.glob(os.path.join(path_dir, "train_*_*.npy"))
+    
+    # Sort files by idx first, then by number (train_{idx}_{number}.npy)
+    def extract_sort_key(filename):
+        match = re.search(r'train_(\d+)_(\d+)\.npy', os.path.basename(filename))
+        if match:
+            idx = int(match.group(1))
+            number = int(match.group(2))
+            return (idx, number)
+        return (0, 0)
+    
+    npy_files.sort(key=extract_sort_key)
+    
+    print(f"Found {len(npy_files)} .npy files to process")
+
+    hex_size = 20
+    for npy_path in npy_files[49*3+21:]:
+        # get number 1 and 2 from the filename
+        filename = os.path.basename(npy_path)
+        match = re.search(r'train_(\d+)_(\d+)\.npy', filename)
+        if match:
+            idx = int(match.group(1))
+            number = int(match.group(2))
+            save_dir = f"dataset/training_data/consep/consep/train/540x540_164x164/ARCADE_OUTPUT/"
+            os.makedirs(save_dir, exist_ok=True)
+            cells, locations, cells_json = convert_patch_to_hexagonal(npy_path, hex_size, idx, number, save_dir)
+            #break
