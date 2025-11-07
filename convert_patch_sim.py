@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for multiprocessing compatibility
 import matplotlib.pyplot as plt
 import json
 from collections import defaultdict
@@ -6,6 +8,7 @@ import cv2
 import glob
 import os
 import re
+from concurrent.futures import ProcessPoolExecutor, as_completed
 type_to_name = {
     1: "OTHER",
     2: "INFLAMMATORY",
@@ -361,6 +364,25 @@ def convert_patch_to_hexagonal(npy_path, hex_size, idx, number, save_dir):
     return cells, locations_data, cells_data
 
 
+def process_single_patch(args):
+    """
+    Worker function to process a single patch file.
+    This function is designed to be called in parallel.
+    
+    Args:
+        args: Tuple of (npy_path, hex_size, idx, number, save_dir)
+    
+    Returns:
+        Tuple of (npy_path, success, error_message)
+    """
+    npy_path, hex_size, idx, number, save_dir = args
+    try:
+        cells, locations, cells_json = convert_patch_to_hexagonal(npy_path, hex_size, idx, number, save_dir)
+        return (npy_path, True, None)
+    except Exception as e:
+        return (npy_path, False, str(e))
+
+
 # Example usage
 if __name__ == "__main__":
     path_dir = "dataset/training_data/consep/consep/train/540x540_164x164/"
@@ -382,14 +404,40 @@ if __name__ == "__main__":
     print(f"Found {len(npy_files)} .npy files to process")
 
     hex_size = 20
-    for npy_path in npy_files[49*3+21:]:
-        # get number 1 and 2 from the filename
+    save_dir = f"dataset/training_data/consep/consep/train/540x540_164x164/ARCADE_OUTPUT/"
+    os.makedirs(save_dir, exist_ok=True)
+    
+    # Prepare arguments for parallel processing
+    process_args = []
+    for npy_path in npy_files[49*8:]:
         filename = os.path.basename(npy_path)
         match = re.search(r'train_(\d+)_(\d+)\.npy', filename)
         if match:
             idx = int(match.group(1))
             number = int(match.group(2))
-            save_dir = f"dataset/training_data/consep/consep/train/540x540_164x164/ARCADE_OUTPUT/"
-            os.makedirs(save_dir, exist_ok=True)
-            cells, locations, cells_json = convert_patch_to_hexagonal(npy_path, hex_size, idx, number, save_dir)
-            #break
+            process_args.append((npy_path, hex_size, idx, number, save_dir))
+    
+    # Process files in parallel
+    max_workers = int(os.cpu_count()/2) or 4  # Use all available CPU cores
+    print(f"Processing {len(process_args)} files in parallel using {max_workers} workers...")
+    
+    completed = 0
+    failed = 0
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all tasks
+        future_to_path = {executor.submit(process_single_patch, args): args[0] for args in process_args}
+        
+        # Process completed tasks as they finish
+        for future in as_completed(future_to_path):
+            npy_path, success, error = future.result()
+            if success:
+                completed += 1
+                print(f"[{completed}/{len(process_args)}] Completed: {os.path.basename(npy_path)}")
+            else:
+                failed += 1
+                print(f"[ERROR] Failed to process {os.path.basename(npy_path)}: {error}")
+    
+    print(f"\nProcessing complete!")
+    print(f"Successfully processed: {completed}/{len(process_args)}")
+    if failed > 0:
+        print(f"Failed: {failed}/{len(process_args)}")
