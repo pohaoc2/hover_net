@@ -223,6 +223,14 @@ if __name__ == "__main__":
     
     print(f"Found {len(npy_files)} .npy files to process")
     
+    for patch_path in npy_files:
+        # Save patch as image
+        patch = np.load(patch_path)
+        img = patch[..., :3].astype(np.uint8)
+        cv2.imwrite(patch_path.replace(".npy", ".png"), img)
+        print(f"Saved {patch_path} as {patch_path.replace('.npy', '.png')}")
+    asd()
+
     # Iterate over all .npy files
     for patch_path in npy_files:
         # Extract the base filename without extension
