@@ -220,7 +220,7 @@ if __name__ == "__main__":
         return (0, 0)
     
     npy_files.sort(key=extract_sort_key)
-    
+    #npy_files = npy_files[:10]
     print(f"Found {len(npy_files)} .npy files to process")
     
     for patch_path in npy_files:
@@ -229,7 +229,6 @@ if __name__ == "__main__":
         img = patch[..., :3].astype(np.uint8)
         cv2.imwrite(patch_path.replace(".npy", ".png"), img)
         print(f"Saved {patch_path} as {patch_path.replace('.npy', '.png')}")
-    asd()
 
     # Iterate over all .npy files
     for patch_path in npy_files:

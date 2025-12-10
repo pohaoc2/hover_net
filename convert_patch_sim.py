@@ -260,76 +260,98 @@ def convert_to_hexagonal_system(cells, img_shape, hex_size, idx, number, save_di
 
 def visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center, output_path=None):
     """
-    Visualize the conversion from Cartesian to hexagonal coordinates overlaid on original image.
+    Visualize the conversion from Cartesian to hexagonal coordinates.
+    Creates two separate 540x540 images:
+    1. Hexagonal grid with grayscale fill (no original image)
+    2. Original image masked to only show hexagonal regions
     """
-    fig, axes = plt.subplots(1, 2, figsize=(18, 8))
+    from matplotlib.patches import Polygon
     
-    colors = get_class_colors()
     center_x, center_y = center
+    height, width = img.shape[:2]
     
-    # Plot 1: Original Cartesian coordinates overlaid on image
-    ax1 = axes[0]
-    ax1.imshow(img)
-    for cell in cells:
-        color = np.array(colors.get(cell['type'], (128, 128, 128))) / 255.0
-        ax1.scatter(cell['x'], cell['y'], c=[color], s=50, alpha=0.8, edgecolors='k', linewidths=1)
+    # Ensure image is 540x540
+    target_size = 540
+    if height != target_size or width != target_size:
+        img_resized = cv2.resize(img, (target_size, target_size))
+    else:
+        img_resized = img.copy()
     
+    # Find maximum number of cells in any hexagon for normalization
+    max_cells = max(len(location['ids']) for location in locations_data) if locations_data else 1
     
-    ax1.set_xlabel('X (pixels)', fontsize=12)
-    ax1.set_ylabel('Y (pixels)', fontsize=12)
-    ax1.set_title('Original Cartesian Coordinates', fontsize=14, fontweight='bold')
+    # Image 1: Hexagonal grid with grayscale fill (no original image background)
+    fig1, ax1 = plt.subplots(1, 1, figsize=(target_size/100, target_size/100))
+    ax1.set_xlim(0, target_size)
+    ax1.set_ylim(target_size, 0)
     ax1.axis('off')
-
-    # Plot 2: Hexagonal grid with assigned cells overlaid on image
-    ax2 = axes[1]
-    ax2.imshow(img)
+    ax1.set_facecolor('white')
     
-    # Draw hexagonal grid
     for location in locations_data:
         u, v, w, _ = location['coordinate']
         x, y = hex_to_xy(u, v, w, hex_size, center_x, center_y)
         
-        # Draw hexagon
+        # Calculate grayscale value based on number of cells
+        # More cells = darker (closer to 0/black)
+        num_cells_in_hex = len(location['ids'])
+        # Normalize: 0 cells = white (1.0), max_cells = black (0.0)
+        gray_value = 1.0 - (num_cells_in_hex / max_cells) if max_cells > 0 else 1.0
+        
+        # Create hexagon vertices
         angles = np.linspace(0, 2*np.pi, 7)
         hex_x = x + hex_size * np.cos(angles)
         hex_y = y + hex_size * np.sin(angles)
-        ax2.plot(hex_x, hex_y, 'k', alpha=0.6, linewidth=2)
+        hex_vertices = np.column_stack([hex_x, hex_y])
         
-        # Plot cells in this hexagon
-        num_cells_in_hex = len(location['ids'])
-        # cell: list of dicts with id, x, y, type, area
-        cell_types = [c['type'] for c in cells if c['id'] in location['ids']] 
-        most_common_type = max(set(cell_types), key=cell_types.count)
-        color = np.array(colors.get(most_common_type, (128, 128, 128))) / 255.0
-        ax2.scatter(x, y, c=[color], s=50, alpha=0.8, edgecolors='k', linewidths=1)
-
+        # Fill hexagon with grayscale color
+        hex_polygon = Polygon(hex_vertices, closed=True, 
+                             facecolor=(gray_value, gray_value, gray_value), 
+                             edgecolor='k',
+                             linewidth=1,
+                             alpha=1.0)
+        ax1.add_patch(hex_polygon)
     
-    ax2.set_xlabel('X (pixels)', fontsize=12)
-    ax2.set_ylabel('Y (pixels)', fontsize=12)
-    ax2.set_title(f'Hexagonal Grid (hex_size={hex_size}px)', fontsize=14, fontweight='bold')
+    hex_path = output_path.replace('_hexagonal_visualization.png', '_0000.000000.population.count.png') if output_path else None
+    if hex_path:
+        plt.savefig(hex_path, dpi=100, bbox_inches='tight', pad_inches=0, facecolor='white')
+    plt.close(fig1)
+    
+    # Image 2: Original image masked to only show hexagonal regions
+    fig2, ax2 = plt.subplots(1, 1, figsize=(target_size/100, target_size/100))
+    
+    # Create a black background
+    masked_img = np.zeros((target_size, target_size, 3), dtype=np.uint8)
+    
+    # Create combined mask for all hexagons
+    combined_mask = np.zeros((target_size, target_size), dtype=np.uint8)
+    
+    for location in locations_data:
+        u, v, w, _ = location['coordinate']
+        x, y = hex_to_xy(u, v, w, hex_size, center_x, center_y)
+        
+        # Create hexagon vertices
+        angles = np.linspace(0, 2*np.pi, 7)
+        hex_x = x + hex_size * np.cos(angles)
+        hex_y = y + hex_size * np.sin(angles)
+        hex_points = np.array([(int(px), int(py)) for px, py in zip(hex_x, hex_y)], dtype=np.int32)
+        
+        # Add to combined mask
+        cv2.fillPoly(combined_mask, [hex_points], 255)
+    
+    # Apply mask to original image
+    masked_img = cv2.bitwise_and(img_resized, img_resized, mask=combined_mask)
+    
+    ax2.imshow(masked_img)
     ax2.axis('off')
+    ax2.set_xlim(0, target_size)
+    ax2.set_ylim(target_size, 0)
     
-    # Add legend for cell types
-    from matplotlib.patches import Patch
-    legend_elements = [
-        Patch(facecolor=np.array(colors[1])/255, label='Other'),
-        Patch(facecolor=np.array(colors[2])/255, label='Inflammatory'),
-        Patch(facecolor=np.array(colors[3])/255, label='Healthy Epithelial'),
-        Patch(facecolor=np.array(colors[4])/255, label='Dysplastic/Malignant'),
-        Patch(facecolor=np.array(colors[5])/255, label='Fibroblast'),
-        Patch(facecolor=np.array(colors[6])/255, label='Muscle'),
-        Patch(facecolor=np.array(colors[7])/255, label='Endothelial'),
-    ]
-    fig.legend(handles=legend_elements, loc='upper center', ncol=7, 
-              bbox_to_anchor=(0.5, 0.98), fontsize=10)
-    
-    plt.tight_layout(rect=[0, 0, 1, 0.96])
-    
-    if output_path:
-        plt.savefig(output_path, dpi=150, bbox_inches='tight', transparent=True)
+    masked_path = output_path.replace('_hexagonal_visualization.png', '_masked_original.png') if output_path else None
+    if masked_path:
+        plt.savefig(masked_path, dpi=100, bbox_inches='tight', pad_inches=0)
     else:
         plt.show()
-    plt.close()
+    plt.close(fig2)
 
 # Main conversion function
 def convert_patch_to_hexagonal(npy_path, hex_size, idx, number, save_dir):
@@ -400,16 +422,16 @@ if __name__ == "__main__":
         return (0, 0)
     
     npy_files.sort(key=extract_sort_key)
-    
+    #npy_files = npy_files[:10]
     print(f"Found {len(npy_files)} .npy files to process")
 
     hex_size = 20
-    save_dir = f"dataset/training_data/consep/consep/train/540x540_164x164/ARCADE_OUTPUT/"
+    save_dir = f"dataset/training_data/consep/consep/train/540x540_164x164/mask_original/"
     os.makedirs(save_dir, exist_ok=True)
     
     # Prepare arguments for parallel processing
     process_args = []
-    for npy_path in npy_files[49*8:]:
+    for npy_path in npy_files[:]:
         filename = os.path.basename(npy_path)
         match = re.search(r'train_(\d+)_(\d+)\.npy', filename)
         if match:
