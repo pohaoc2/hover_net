@@ -283,7 +283,7 @@ def visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center,
     max_cells = max(len(location['ids']) for location in locations_data) if locations_data else 1
     
     # Image 1: Hexagonal grid with grayscale fill (no original image background)
-    fig1, ax1 = plt.subplots(1, 2, figsize=(target_size/100, target_size/100))
+    fig1, ax1 = plt.subplots(1, 1, figsize=(target_size/100, target_size/100))
     ax1.set_xlim(0, target_size)
     ax1.set_ylim(target_size, 0)
     ax1.axis('off')
