@@ -82,7 +82,7 @@ def draw_cell_visualization(ax, cells_data, id_to_location, locations_data,
     """Draw colored cell visualization with labels."""
     for cell in cells_data:
         cell_id = cell['id']
-        volume = cell['volume']*8.7
+        volume = cell['volume']*8.2
         height = cell['height']
         hex_coord = id_to_location[cell_id]
         
@@ -127,7 +127,7 @@ def draw_binary_mask_to_array(cells_data, id_to_location, locations_data,
     
     for cell in cells_data:
         cell_id = cell['id']
-        volume = cell['volume']
+        volume = cell['volume']*8.2
         height = cell['height']
         hex_coord = id_to_location[cell_id]
         
@@ -167,7 +167,7 @@ def draw_binary_mask(ax, cells_data, id_to_location, locations_data,
     
     for cell in cells_data:
         cell_id = cell['id']
-        volume = cell['volume']
+        volume = cell['volume']*8.2
         height = cell['height']
         hex_coord = id_to_location[cell_id]
         
@@ -276,7 +276,7 @@ def main():
                 folder_path, number, sub_number, HEX_SIZE, IMAGE_SIZE,
                 CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR, RANDOM_SEED
             ))
-    
+    #process_args = process_args[:1]
     # Process files in parallel
     max_workers = int(os.cpu_count() / 2) or 4
     print(f"Processing {len(process_args)} mask files in parallel using {max_workers} workers...")
