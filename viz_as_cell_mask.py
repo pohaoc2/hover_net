@@ -1,16 +1,19 @@
 import json
+import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import os
 
-HEX_SIZE = 25
-IMAGE_SIZE = 512
+HEX_SIZE = 20
+IMAGE_SIZE = 540
 CIRCULARITY_MIN = 0.7
 CIRCULARITY_MAX = 1.0
-OVERLAP_OFFSET_FACTOR = 0.3
+OVERLAP_OFFSET_FACTOR = 0.4
 RANDOM_SEED = 42
-FIG_WIDTH = 20
-FIG_HEIGHT = 10
+FIG_WIDTH = 12
+FIG_HEIGHT = 6
 DPI = 150
 
 
@@ -79,7 +82,7 @@ def draw_cell_visualization(ax, cells_data, id_to_location, locations_data,
     """Draw colored cell visualization with labels."""
     for cell in cells_data:
         cell_id = cell['id']
-        volume = cell['volume']
+        volume = cell['volume']*8.7
         height = cell['height']
         hex_coord = id_to_location[cell_id]
         
@@ -116,10 +119,50 @@ def draw_cell_visualization(ax, cells_data, id_to_location, locations_data,
     ax.set_title('Cell Visualization in Hexagonal Grid')
     ax.invert_yaxis()
 
+def draw_binary_mask_to_array(cells_data, id_to_location, locations_data,
+                              hex_size, img_size, center_x, center_y,
+                              circularity_min, circularity_max, overlap_offset_factor):
+    """Draw binary mask directly as numpy array - most efficient."""
+    mask = np.zeros((img_size, img_size), dtype=np.uint8)
+    
+    for cell in cells_data:
+        cell_id = cell['id']
+        volume = cell['volume']
+        height = cell['height']
+        hex_coord = id_to_location[cell_id]
+        
+        x, y = get_cell_position(cell_id, hex_coord, id_to_location,
+                                locations_data, hex_size, center_x, center_y,
+                                overlap_offset_factor)
+        
+        a, b = calculate_ellipse_axes(volume, height, circularity_min, circularity_max)
+        angle = np.random.uniform(0, 360)
+        
+        angle_rad = np.radians(angle)
+        cos_a = np.cos(angle_rad)
+        sin_a = np.sin(angle_rad)
+        
+        y_min = max(0, int(y - max(a, b) - 1))
+        y_max = min(img_size, int(y + max(a, b) + 1))
+        x_min = max(0, int(x - max(a, b) - 1))
+        x_max = min(img_size, int(x + max(a, b) + 1))
+        
+        for py in range(y_min, y_max):
+            for px in range(x_min, x_max):
+                dx = px - x
+                dy = py - y
+                dx_rot = dx * cos_a + dy * sin_a
+                dy_rot = -dx * sin_a + dy * cos_a
+                
+                if (dx_rot/a)**2 + (dy_rot/b)**2 <= 1:
+                    mask[py, px] = 255
+    
+    return mask
+
 def draw_binary_mask(ax, cells_data, id_to_location, locations_data,
                     hex_size, img_size, center_x, center_y,
                     circularity_min, circularity_max, overlap_offset_factor):
-    """Draw binary mask of cells."""
+    """Draw binary mask of cells, with no border around the figure."""
     mask = np.zeros((img_size, img_size), dtype=np.uint8)
     
     for cell in cells_data:
@@ -159,8 +202,11 @@ def draw_binary_mask(ax, cells_data, id_to_location, locations_data,
                     mask[py, px] = 255
     
     ax.imshow(mask, cmap='gray')
-    ax.set_title('Binary Mask')
     ax.axis('off')
+    ax.set_xticks([])
+    ax.set_yticks([])
+    for spine in ax.spines.values():
+        spine.set_visible(False)
 
 def create_id_to_location_mapping(locations_data):
     """Create mapping from cell ID to location."""
@@ -173,45 +219,89 @@ def create_id_to_location_mapping(locations_data):
     return id_to_location
 
 
+def process_single_mask(args):
+    """
+    Worker function to process a single mask file.
+    This function is designed to be called in parallel.
+    
+    Args:
+        args: Tuple of (folder_path, number, sub_number, hex_size, img_size, 
+                       circularity_min, circularity_max, overlap_offset_factor, random_seed)
+    
+    Returns:
+        Tuple of (number, sub_number, success, error_message)
+    """
+    folder_path, number, sub_number, hex_size, img_size, circularity_min, circularity_max, overlap_offset_factor, random_seed = args
+    try:
+        cell_path = folder_path + f'train_{number}_{sub_number}_0000_000000.CELLS.json'
+        location_path = folder_path + f'train_{number}_{sub_number}_0000_000000.LOCATIONS.json'
+        
+        with open(cell_path, 'r') as f:
+            cells_data = json.load(f)
+        
+        with open(location_path, 'r') as f:
+            locations_data = json.load(f)
+        
+        # Derived parameters
+        center_x = center_y = img_size // 2
+        
+        # Create mapping
+        id_to_location = create_id_to_location_mapping(locations_data)
+        
+        # Set random seed for reproducibility
+        np.random.seed(random_seed)
+        
+        # Generate mask
+        mask = draw_binary_mask_to_array(cells_data, id_to_location, locations_data,
+                        hex_size, img_size, center_x, center_y,
+                        circularity_min, circularity_max, overlap_offset_factor)
+        
+        # Save mask
+        cv2.imwrite(folder_path + f'train_{number}_{sub_number}.mask.png', mask)
+        
+        return (number, sub_number, True, None)
+    except Exception as e:
+        return (number, sub_number, False, str(e))
+
+
 def main():
     # Load data
-    cell_path = '../ARCADE_OUTPUT/ABC_SMC_RF_N128_combined_grid_breast/iter_0/inputs/input_1/combined_grid_0000_000000.CELLS.json'
-    location_path = '../ARCADE_OUTPUT/ABC_SMC_RF_N128_combined_grid_breast/iter_0/inputs/input_1/combined_grid_0000_000000.LOCATIONS.json'
-    with open(cell_path, 'r') as f:
-        cells_data = json.load(f)
+    folder_path = 'dataset/training_data/consep/consep/train/540x540_164x164/mask_original/'
     
-    with open(location_path, 'r') as f:
-        locations_data = json.load(f)
+    # Prepare arguments for parallel processing
+    process_args = []
+    for number in range(1, 28):
+        for sub_number in range(49):
+            process_args.append((
+                folder_path, number, sub_number, HEX_SIZE, IMAGE_SIZE,
+                CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR, RANDOM_SEED
+            ))
     
-    # Derived parameters
-    center_x = center_y = IMAGE_SIZE // 2
+    # Process files in parallel
+    max_workers = int(os.cpu_count() / 2) or 4
+    print(f"Processing {len(process_args)} mask files in parallel using {max_workers} workers...")
     
-    # Create mapping
-    id_to_location = create_id_to_location_mapping(locations_data)
+    completed = 0
+    failed = 0
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all tasks
+        future_to_args = {executor.submit(process_single_mask, args): args for args in process_args}
+        
+        # Process completed tasks as they finish
+        for future in as_completed(future_to_args):
+            number, sub_number, success, error = future.result()
+            if success:
+                completed += 1
+                print(f"[{completed}/{len(process_args)}] Completed: train_{number}_{sub_number}.mask.png")
+            else:
+                failed += 1
+                print(f"[ERROR] Failed to process train_{number}_{sub_number}.mask.png: {error}")
     
-    # Set random seed for reproducibility
-    np.random.seed(RANDOM_SEED)
-    
-    # Create figure with two subplots
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(FIG_WIDTH, FIG_HEIGHT))
-    
-    # Draw visualization
-    draw_cell_visualization(ax1, cells_data, id_to_location, locations_data,
-                           HEX_SIZE, IMAGE_SIZE, center_x, center_y,
-                           CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR)
-    
-    # Reset random seed for binary mask
-    np.random.seed(RANDOM_SEED)
-    
-    # Draw binary mask
-    draw_binary_mask(ax2, cells_data, id_to_location, locations_data,
-                    HEX_SIZE, IMAGE_SIZE, center_x, center_y,
-                    CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR)
-    
-    plt.tight_layout()
-    plt.savefig('../ARCADE_OUTPUT/outputs/cell_visualization.png', dpi=DPI, bbox_inches='tight')
-    print("Visualization saved to cell_visualization.png")
-    plt.show()
+    print(f"\nProcessing complete!")
+    print(f"Successfully processed: {completed}/{len(process_args)}")
+    if failed > 0:
+        print(f"Failed: {failed}/{len(process_args)}")
+
 
 if __name__ == '__main__':
     main()

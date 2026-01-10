@@ -46,10 +46,8 @@ def extract_centroids_from_patch(npy_path):
     img = patch[..., :3].astype(np.uint8)
     inst_map = patch[..., 3].astype(np.int32)
     type_map = patch[..., 4].astype(np.int32)
-    
     nucleus_ids = np.unique(inst_map)
     nucleus_ids = nucleus_ids[nucleus_ids != 0]
-    
     cells = []
     mirror_cell_count = 0
     for nucleus_id in nucleus_ids:
@@ -258,12 +256,16 @@ def convert_to_hexagonal_system(cells, img_shape, hex_size, idx, number, save_di
     
     return locations_data, cells_data, (center_x, center_y)
 
-def visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center, output_path=None):
+def visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center, output_path=None, use_white_background=True):
     """
     Visualize the conversion from Cartesian to hexagonal coordinates.
     Creates two separate 540x540 images:
     1. Hexagonal grid with grayscale fill (no original image)
     2. Original image masked to only show hexagonal regions
+    
+    Args:
+        use_white_background: If True, background is white and more cells = darker.
+                             If False, background is black and more cells = lighter.
     """
     from matplotlib.patches import Polygon
     
@@ -285,18 +287,27 @@ def visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center,
     ax1.set_xlim(0, target_size)
     ax1.set_ylim(target_size, 0)
     ax1.axis('off')
-    ax1.set_facecolor('white')
+    
+    # Set background color based on use_white_background
+    bg_color = 'white' if use_white_background else 'black'
+    ax1.set_facecolor(bg_color)
     
     for location in locations_data:
         u, v, w, _ = location['coordinate']
         x, y = hex_to_xy(u, v, w, hex_size, center_x, center_y)
         
         # Calculate grayscale value based on number of cells
-        # More cells = darker (closer to 0/black)
         num_cells_in_hex = len(location['ids'])
-        # Normalize: 0 cells = white (1.0), max_cells = black (0.0)
-        gray_value = 1.0 - (num_cells_in_hex / max_cells) if max_cells > 0 else 1.0
-        
+        if use_white_background:
+            # White background: more cells = darker (closer to 0/black)
+            # Normalize: 0 cells = white (1.0), max_cells = black (0.0)
+            gray_value = 1.0 - (num_cells_in_hex / max_cells) if max_cells > 0 else 1.0
+            hex_path = output_path.replace('_hexagonal_visualization.png', '_0000.000000.population.count.white_bg.png') if output_path else None
+        else:
+            # Black background: more cells = lighter (closer to 1.0/white)
+            # Normalize: 0 cells = black (0.0), max_cells = white (1.0)
+            gray_value = (num_cells_in_hex / max_cells) if max_cells > 0 else 0.0
+            hex_path = output_path.replace('_hexagonal_visualization.png', '_0000.000000.population.count.black_bg.png') if output_path else None
         # Create hexagon vertices
         angles = np.linspace(0, 2*np.pi, 7)
         hex_x = x + hex_size * np.cos(angles)
@@ -311,9 +322,9 @@ def visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center,
                              alpha=1.0)
         ax1.add_patch(hex_polygon)
     
-    hex_path = output_path.replace('_hexagonal_visualization.png', '_0000.000000.population.count.png') if output_path else None
+    
     if hex_path:
-        plt.savefig(hex_path, dpi=100, bbox_inches='tight', pad_inches=0, facecolor='white')
+        plt.savefig(hex_path, dpi=100, bbox_inches='tight', pad_inches=0, facecolor=bg_color)
     plt.close(fig1)
     
     # Image 2: Original image masked to only show hexagonal regions
@@ -372,6 +383,11 @@ def convert_patch_to_hexagonal(npy_path, hex_size, idx, number, save_dir):
     
     # Extract centroids and cell properties
     cells, img = extract_centroids_from_patch(npy_path)
+    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+    ax.imshow(img)
+    ax.axis('off')
+    plt.savefig(f"{save_dir}sandbox_{idx}_{number}_original.png", dpi=100, bbox_inches='tight', pad_inches=0)
+    plt.close(fig)
     print(f"Extracted {len(cells)} cells")
     
     # Convert to hexagonal system
@@ -381,10 +397,29 @@ def convert_patch_to_hexagonal(npy_path, hex_size, idx, number, save_dir):
     
     # Visualize
     visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center,
-                                   output_path=f"{save_dir}train_{idx}_{number}_hexagonal_visualization.png")
+                                   output_path=f"{save_dir}train_{idx}_{number}_hexagonal_visualization.png",
+                                   use_white_background=False)
     
     return cells, locations_data, cells_data
 
+def save_binary_nuclei_map(npy_path, save_dir, idx, number, with_contour=False):
+    patch = np.load(npy_path)
+    inst_map = patch[..., 3].astype(np.int32)
+    mask = (inst_map > 0).astype(np.uint8)
+    
+    if with_contour:
+        # Get unique instance IDs (excluding background)
+        instance_ids = np.unique(inst_map)
+        instance_ids = instance_ids[instance_ids != 0]
+        
+        # Draw contours for each instance to split them
+        for instance_id in instance_ids:
+            instance_mask = (inst_map == instance_id).astype(np.uint8)
+            contours, _ = cv2.findContours(instance_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            # Draw contours as black (0) to create boundaries between instances
+            cv2.drawContours(mask, contours, -1, 0, thickness=1)
+    
+    cv2.imwrite(f"{save_dir}binary_nuclei_map_{idx}_{number}.png", mask*255)
 
 def process_single_patch(args):
     """
@@ -400,6 +435,7 @@ def process_single_patch(args):
     npy_path, hex_size, idx, number, save_dir = args
     try:
         cells, locations, cells_json = convert_patch_to_hexagonal(npy_path, hex_size, idx, number, save_dir)
+        save_binary_nuclei_map(npy_path, save_dir, idx, number, with_contour=True)
         return (npy_path, True, None)
     except Exception as e:
         return (npy_path, False, str(e))
@@ -422,7 +458,7 @@ if __name__ == "__main__":
         return (0, 0)
     
     npy_files.sort(key=extract_sort_key)
-    #npy_files = npy_files[:10]
+    npy_files = npy_files[:]
     print(f"Found {len(npy_files)} .npy files to process")
 
     hex_size = 20
