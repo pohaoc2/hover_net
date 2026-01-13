@@ -256,33 +256,41 @@ def convert_to_hexagonal_system(cells, img_shape, hex_size, idx, number, save_di
     
     return locations_data, cells_data, (center_x, center_y)
 
-def plot_hexagonal_population(locations_data, hex_size, center_x, center_y, target_size, max_cells, output_path=None, use_white_background=True):
+def plot_hexagonal_population(locations_data, hex_size, center_x, center_y, target_size, max_cells, output_path=None, use_white_background=True, target_mpp=0.5):
     """
     Plot the hexagonal grid with grayscale fill indicating cell counts.
 
     Args:
         locations_data: List of hexagonal locations, each with coordinate and ids.
-        hex_size: Size of hexagon in pixels.
-        center_x, center_y: Center of the grid in image coordinates.
-        target_size: Size of the output image (assumed square).
+        hex_size: Size of hexagon in microns.
+        center_x, center_y: Center of the grid in pixel coordinates.
+        target_size: Size of the output image in pixels (assumed square).
         max_cells: Maximum number of cells in any hexagon (for normalization).
         output_path: Path to save the plot. If None, does not save.
         use_white_background: If True, white background; else black.
+        target_mpp: Target microns per pixel (default 0.5).
     """
     from matplotlib.patches import Polygon
 
-    fig1, ax1 = plt.subplots(1, 1, figsize=(target_size/100, target_size/100))
+    # Convert hex_size from microns to pixels
+    hex_size_pixels = hex_size / target_mpp
+    
+    # Calculate figure size and DPI to get exact pixel dimensions
+    # Using figsize in inches and dpi to control output size
+    dpi = 100
+    figsize_inches = target_size / dpi
+    
+    fig1, ax1 = plt.subplots(1, 1, figsize=(figsize_inches, figsize_inches))
     ax1.set_xlim(0, target_size)
     ax1.set_ylim(target_size, 0)
     ax1.axis('off')
-    
+    fig1.subplots_adjust(left=0, right=1, top=1, bottom=0)
     # Set background color based on use_white_background
     bg_color = 'white' if use_white_background else 'black'
-    ax1.set_facecolor(bg_color)
     
     for location in locations_data:
         u, v, w, _ = location['coordinate']
-        x, y = hex_to_xy(u, v, w, hex_size, center_x, center_y)
+        x, y = hex_to_xy(u, v, w, hex_size_pixels, center_x, center_y)
         
         # Calculate grayscale value based on number of cells
         num_cells_in_hex = len(location['ids'])
@@ -296,10 +304,11 @@ def plot_hexagonal_population(locations_data, hex_size, center_x, center_y, targ
             # Normalize: 0 cells = black (0.0), max_cells = white (1.0)
             gray_value = (num_cells_in_hex / max_cells) if max_cells > 0 else 0.0
             hex_path = output_path.replace('_hexagonal_visualization.png', '_0000.000000.population.count.black_bg.png') if output_path else None
+            
         # Create hexagon vertices
         angles = np.linspace(0, 2*np.pi, 7)
-        hex_x = x + hex_size * np.cos(angles)
-        hex_y = y + hex_size * np.sin(angles)
+        hex_x = x + hex_size_pixels * np.cos(angles)
+        hex_y = y + hex_size_pixels * np.sin(angles)
         hex_vertices = np.column_stack([hex_x, hex_y])
         
         # Fill hexagon with grayscale color
@@ -311,10 +320,12 @@ def plot_hexagonal_population(locations_data, hex_size, center_x, center_y, targ
         ax1.add_patch(hex_polygon)
     
     if hex_path:
-        plt.savefig(hex_path, dpi=100, bbox_inches='tight', pad_inches=0, facecolor=bg_color)
+        os.makedirs(os.path.dirname(hex_path), exist_ok=True)
+        plt.savefig(hex_path, dpi=dpi, pad_inches=0, facecolor=bg_color)
     else:
         plt.show()
     plt.close(fig1)
+
 
 def visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center, output_path=None, use_white_background=True):
     """
@@ -530,8 +541,9 @@ def visualize_arcade_simulation(locations_data, hex_size, center_x, center_y, ta
 # Example usage
 if __name__ == "__main__":
     #main()
-    hex_size = 30
-    target_size = 2048
+    hex_size = 30 / 3 ** 0.5 # microns
+    print(f"Hex size: {hex_size} microns")
+    target_size = 540 # pixels
     center_x = target_size/2
     center_y = target_size/2
     
@@ -544,3 +556,4 @@ if __name__ == "__main__":
         output_path = f"ARCADE_VIZ/{input_id:06d}.png"
         
         visualize_arcade_simulation(locations_data, hex_size, center_x, center_y, target_size, max_cells, output_path, use_white_background)
+
