@@ -256,33 +256,21 @@ def convert_to_hexagonal_system(cells, img_shape, hex_size, idx, number, save_di
     
     return locations_data, cells_data, (center_x, center_y)
 
-def visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center, output_path=None, use_white_background=True):
+def plot_hexagonal_population(locations_data, hex_size, center_x, center_y, target_size, max_cells, output_path=None, use_white_background=True):
     """
-    Visualize the conversion from Cartesian to hexagonal coordinates.
-    Creates two separate 540x540 images:
-    1. Hexagonal grid with grayscale fill (no original image)
-    2. Original image masked to only show hexagonal regions
-    
+    Plot the hexagonal grid with grayscale fill indicating cell counts.
+
     Args:
-        use_white_background: If True, background is white and more cells = darker.
-                             If False, background is black and more cells = lighter.
+        locations_data: List of hexagonal locations, each with coordinate and ids.
+        hex_size: Size of hexagon in pixels.
+        center_x, center_y: Center of the grid in image coordinates.
+        target_size: Size of the output image (assumed square).
+        max_cells: Maximum number of cells in any hexagon (for normalization).
+        output_path: Path to save the plot. If None, does not save.
+        use_white_background: If True, white background; else black.
     """
     from matplotlib.patches import Polygon
-    
-    center_x, center_y = center
-    height, width = img.shape[:2]
-    
-    # Ensure image is 540x540
-    target_size = 540
-    if height != target_size or width != target_size:
-        img_resized = cv2.resize(img, (target_size, target_size))
-    else:
-        img_resized = img.copy()
-    
-    # Find maximum number of cells in any hexagon for normalization
-    max_cells = max(len(location['ids']) for location in locations_data) if locations_data else 1
-    
-    # Image 1: Hexagonal grid with grayscale fill (no original image background)
+
     fig1, ax1 = plt.subplots(1, 1, figsize=(target_size/100, target_size/100))
     ax1.set_xlim(0, target_size)
     ax1.set_ylim(target_size, 0)
@@ -316,15 +304,50 @@ def visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center,
         
         # Fill hexagon with grayscale color
         hex_polygon = Polygon(hex_vertices, closed=True, 
-                             facecolor=(gray_value, gray_value, gray_value), 
-                             edgecolor='k',
-                             linewidth=2.5,
-                             alpha=1.0)
+                            facecolor=(gray_value, gray_value, gray_value), 
+                            edgecolor='k',
+                            linewidth=2.5,
+                            alpha=1.0)
         ax1.add_patch(hex_polygon)
     
     if hex_path:
         plt.savefig(hex_path, dpi=100, bbox_inches='tight', pad_inches=0, facecolor=bg_color)
+    else:
+        plt.show()
     plt.close(fig1)
+
+def visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center, output_path=None, use_white_background=True):
+    """
+    Visualize the conversion from Cartesian to hexagonal coordinates.
+    Creates two separate 540x540 images:
+    1. Hexagonal grid with grayscale fill (no original image)
+    2. Original image masked to only show hexagonal regions
+    
+    Args:
+        use_white_background: If True, background is white and more cells = darker.
+                             If False, background is black and more cells = lighter.
+    """
+    from matplotlib.patches import Polygon
+    
+    center_x, center_y = center
+    height, width = img.shape[:2]
+    
+    # Ensure image is 540x540
+    target_size = 540
+    if height != target_size or width != target_size:
+        img_resized = cv2.resize(img, (target_size, target_size))
+    else:
+        img_resized = img.copy()
+    
+    # Find maximum number of cells in any hexagon for normalization
+    max_cells = max(len(location['ids']) for location in locations_data) if locations_data else 1
+
+    # Call the extracted function in place of the original code
+    plot_hexagonal_population(
+        locations_data, hex_size, center_x, center_y,
+        target_size=target_size, max_cells=max_cells,
+        output_path=output_path, use_white_background=use_white_background
+    )
     
     # Image 2: Original image masked to only show hexagonal regions
     fig2, ax2 = plt.subplots(1, 1, figsize=(target_size/100, target_size/100))
@@ -440,8 +463,7 @@ def process_single_patch(args):
         return (npy_path, False, str(e))
 
 
-# Example usage
-if __name__ == "__main__":
+def main():
     path_dir = "dataset/training_data/consep/consep/train/540x540_164x164/"
     
     # Get all .npy files matching the pattern train_*_*.npy
@@ -498,3 +520,27 @@ if __name__ == "__main__":
     print(f"Successfully processed: {completed}/{len(process_args)}")
     if failed > 0:
         print(f"Failed: {failed}/{len(process_args)}")
+
+def visualize_arcade_simulation(locations_data, hex_size, center_x, center_y, target_size, max_cells, output_path=None, use_white_background=True):
+    """
+    Visualize the arcade simulation.
+    """
+    plot_hexagonal_population(locations_data, hex_size, center_x, center_y, target_size, max_cells, output_path=output_path, use_white_background=use_white_background)
+
+# Example usage
+if __name__ == "__main__":
+    #main()
+    hex_size = 30
+    target_size = 2048
+    center_x = target_size/2
+    center_y = target_size/2
+    
+    use_white_background = False
+    for input_id in range(1, 2):
+        locations_data_path = f"../ARCADE_OUTPUT/ABC_SMC_RF_N1024_combined_grid_breast_only_mean_2/iter_0/inputs/input_{input_id}/combined_grid_0009_010080.LOCATIONS.json"
+        with open(locations_data_path, 'r') as f:
+            locations_data = json.load(f)
+        max_cells = max(len(location['ids']) for location in locations_data) if locations_data else 1
+        output_path = f"ARCADE_VIZ/{input_id:06d}.png"
+        
+        visualize_arcade_simulation(locations_data, hex_size, center_x, center_y, target_size, max_cells, output_path, use_white_background)
