@@ -140,7 +140,7 @@ def process_single_image(image_path, output_folder, win_size, step_size, origina
 
 
 def main():
-    image_folder = Path("../share_space/data/ICIAR2018_BACH_Challenge/ICIAR2018_BACH_Challenge/Photos/Benign_PNG")
+    image_folder = Path("../share_space/data/ICIAR2018_BACH_Challenge/ICIAR2018_BACH_Challenge/Photos/Invasive_PNG")
     output_folder = image_folder.parent / f"{image_folder.name}_patches"
     
     if not image_folder.exists():
