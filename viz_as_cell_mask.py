@@ -6,15 +6,13 @@ from matplotlib.patches import Ellipse
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import os
 
-HEX_SIZE = 20
+HEX_SIZE = 30 / 3 **0.5
 IMAGE_SIZE = 540
-CIRCULARITY_MIN = 0.7
-CIRCULARITY_MAX = 1.0
-OVERLAP_OFFSET_FACTOR = 0.4
+CIRCULARITY_MIN = 0.45
+CIRCULARITY_MAX = 0.95
+OVERLAP_OFFSET_FACTOR = 0.7
 RANDOM_SEED = 42
-FIG_WIDTH = 12
-FIG_HEIGHT = 6
-DPI = 150
+DPI = 100
 
 
 def hex_to_xy(u, v, w, hex_size, center_x, center_y):
@@ -76,49 +74,6 @@ def get_cell_position(cell_id, hex_coord, id_to_location, locations_data,
     
     return base_x + offset_x, base_y + offset_y
 
-def draw_cell_visualization(ax, cells_data, id_to_location, locations_data, 
-                           hex_size, img_size, center_x, center_y,
-                           circularity_min, circularity_max, overlap_offset_factor):
-    """Draw colored cell visualization with labels."""
-    for cell in cells_data:
-        cell_id = cell['id']
-        volume = cell['volume']*8.2
-        height = cell['height']
-        hex_coord = id_to_location[cell_id]
-        
-        # Get position
-        x, y = get_cell_position(cell_id, hex_coord, id_to_location, 
-                                locations_data, hex_size, center_x, center_y,
-                                overlap_offset_factor)
-        
-        # Calculate ellipse parameters
-        a, b = calculate_ellipse_axes(volume, height, circularity_min, circularity_max)
-        angle = np.random.uniform(0, 360)
-        
-        # Draw ellipse
-        ellipse = Ellipse((x, y), width=2*a, height=2*b, 
-                         angle=angle, 
-                         facecolor='cyan', 
-                         edgecolor='blue', 
-                         alpha=0.6,
-                         linewidth=1.5)
-        ax.add_patch(ellipse)
-        
-        # Add cell ID label
-        ax.text(x, y, str(cell_id), 
-               ha='center', va='center', 
-               fontsize=8, fontweight='bold')
-    
-    # Set axis properties
-    ax.set_xlim(0, img_size)
-    ax.set_ylim(0, img_size)
-    ax.set_aspect('equal')
-    ax.grid(True, alpha=0.3)
-    ax.set_xlabel('X (pixels)')
-    ax.set_ylabel('Y (pixels)')
-    ax.set_title('Cell Visualization in Hexagonal Grid')
-    ax.invert_yaxis()
-
 def draw_binary_mask_to_array(cells_data, id_to_location, locations_data,
                               hex_size, img_size, center_x, center_y,
                               circularity_min, circularity_max, overlap_offset_factor):
@@ -127,7 +82,7 @@ def draw_binary_mask_to_array(cells_data, id_to_location, locations_data,
     
     for cell in cells_data:
         cell_id = cell['id']
-        volume = cell['volume']*8.2
+        volume = cell['volume'] * 0.75
         height = cell['height']
         hex_coord = id_to_location[cell_id]
         
@@ -159,55 +114,6 @@ def draw_binary_mask_to_array(cells_data, id_to_location, locations_data,
     
     return mask
 
-def draw_binary_mask(ax, cells_data, id_to_location, locations_data,
-                    hex_size, img_size, center_x, center_y,
-                    circularity_min, circularity_max, overlap_offset_factor):
-    """Draw binary mask of cells, with no border around the figure."""
-    mask = np.zeros((img_size, img_size), dtype=np.uint8)
-    
-    for cell in cells_data:
-        cell_id = cell['id']
-        volume = cell['volume']*8.2
-        height = cell['height']
-        hex_coord = id_to_location[cell_id]
-        
-        # Get position
-        x, y = get_cell_position(cell_id, hex_coord, id_to_location,
-                                locations_data, hex_size, center_x, center_y,
-                                overlap_offset_factor)
-        
-        # Calculate ellipse parameters
-        a, b = calculate_ellipse_axes(volume, height, circularity_min, circularity_max)
-        angle = np.random.uniform(0, 360)
-        
-        # Rasterize ellipse
-        angle_rad = np.radians(angle)
-        cos_a = np.cos(angle_rad)
-        sin_a = np.sin(angle_rad)
-        
-        # Sample points in bounding box
-        y_min = max(0, int(y - max(a, b) - 1))
-        y_max = min(img_size, int(y + max(a, b) + 1))
-        x_min = max(0, int(x - max(a, b) - 1))
-        x_max = min(img_size, int(x + max(a, b) + 1))
-        
-        for py in range(y_min, y_max):
-            for px in range(x_min, x_max):
-                dx = px - x
-                dy = py - y
-                dx_rot = dx * cos_a + dy * sin_a
-                dy_rot = -dx * sin_a + dy * cos_a
-                
-                if (dx_rot/a)**2 + (dy_rot/b)**2 <= 1:
-                    mask[py, px] = 255
-    
-    ax.imshow(mask, cmap='gray')
-    ax.axis('off')
-    ax.set_xticks([])
-    ax.set_yticks([])
-    for spine in ax.spines.values():
-        spine.set_visible(False)
-
 def create_id_to_location_mapping(locations_data):
     """Create mapping from cell ID to location."""
     id_to_location = {}
@@ -231,15 +137,12 @@ def process_single_mask(args):
     Returns:
         Tuple of (number, sub_number, success, error_message)
     """
-    folder_path, number, sub_number, hex_size, img_size, circularity_min, circularity_max, overlap_offset_factor, random_seed = args
+    file_paths, output_path, hex_size, img_size, circularity_min, circularity_max, overlap_offset_factor, random_seed = args
     try:
-        cell_path = folder_path + f'train_{number}_{sub_number}_0000_000000.CELLS.json'
-        location_path = folder_path + f'train_{number}_{sub_number}_0000_000000.LOCATIONS.json'
-        
-        with open(cell_path, 'r') as f:
+        with open(file_paths[0], 'r') as f:
             cells_data = json.load(f)
         
-        with open(location_path, 'r') as f:
+        with open(file_paths[1], 'r') as f:
             locations_data = json.load(f)
         
         # Derived parameters
@@ -257,23 +160,38 @@ def process_single_mask(args):
                         circularity_min, circularity_max, overlap_offset_factor)
         
         # Save mask
-        cv2.imwrite(folder_path + f'train_{number}_{sub_number}.mask.png', mask)
+        cv2.imwrite(output_path, mask)
         
-        return (number, sub_number, True, None)
+        return (output_path, True, None)
     except Exception as e:
-        return (number, sub_number, False, str(e))
+        return (output_path, False, str(e))
 
 
 def main():
     # Load data
-    folder_path = 'dataset/training_data/consep/consep/train/540x540_164x164/mask_original/'
-    
-    # Prepare arguments for parallel processing
     process_args = []
-    for number in range(1, 28):
-        for sub_number in range(49):
+    if 0:
+        folder_path = 'dataset/training_data/consep/consep/train/540x540_164x164/mask_original/'
+        # Prepare arguments for parallel processing
+        
+        for number in range(1, 28):
+            for sub_number in range(49):
+                cell_path = folder_path + f'train_{number}_{sub_number}_0000_000000.CELLS.json'
+                location_path = folder_path + f'train_{number}_{sub_number}_0000_000000.LOCATIONS.json'
+                output_path = folder_path + f'train_{number}_{sub_number}_0000_000000.mask.png'
+                process_args.append((
+                    [cell_path, location_path], output_path, HEX_SIZE, IMAGE_SIZE,
+                    CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR, RANDOM_SEED
+                ))
+    if 1:
+        folder_path = '../ARCADE_OUTPUT/ABC_SMC_RF_N1024_combined_grid_breast_only_mean_2/iter_0/inputs/'
+        for input_id in range(1, 1025):
+            cell_path = folder_path + f"input_{input_id}/combined_grid_0009_010080.CELLS.json"
+            location_path = folder_path + f"input_{input_id}/combined_grid_0009_010080.LOCATIONS.json"
+            os.makedirs(folder_path + f"mask_pngs", exist_ok=True)
+            output_path = folder_path + f"mask_pngs/input_{input_id}.mask.png"
             process_args.append((
-                folder_path, number, sub_number, HEX_SIZE, IMAGE_SIZE,
+                [cell_path, location_path], output_path, HEX_SIZE, IMAGE_SIZE,
                 CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR, RANDOM_SEED
             ))
     #process_args = process_args[:1]
@@ -289,13 +207,13 @@ def main():
         
         # Process completed tasks as they finish
         for future in as_completed(future_to_args):
-            number, sub_number, success, error = future.result()
+            output_path, success, error = future.result()
             if success:
                 completed += 1
-                print(f"[{completed}/{len(process_args)}] Completed: train_{number}_{sub_number}.mask.png")
+                print(f"[{completed}/{len(process_args)}] Completed: {output_path}")
             else:
                 failed += 1
-                print(f"[ERROR] Failed to process train_{number}_{sub_number}.mask.png: {error}")
+                print(f"[ERROR] Failed to process {output_path}: {error}")
     
     print(f"\nProcessing complete!")
     print(f"Successfully processed: {completed}/{len(process_args)}")
