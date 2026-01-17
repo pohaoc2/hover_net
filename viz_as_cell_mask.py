@@ -8,11 +8,12 @@ import os
 
 HEX_SIZE = 30 / 3 **0.5
 IMAGE_SIZE = 540
-CIRCULARITY_MIN = 0.45
-CIRCULARITY_MAX = 0.95
-OVERLAP_OFFSET_FACTOR = 0.7
+CIRCULARITY_MIN = 0.3
+CIRCULARITY_MAX = 0.8
+OVERLAP_OFFSET_FACTOR = 0.8
 RANDOM_SEED = 42
 DPI = 100
+MPP = 0.42
 
 
 def hex_to_xy(u, v, w, hex_size, center_x, center_y):
@@ -28,15 +29,30 @@ def hex_to_xy(u, v, w, hex_size, center_x, center_y):
     
     return x, y
 
-def calculate_ellipse_axes(volume, height, circularity_min, circularity_max):
+def calculate_ellipse_axes(volume, height, circularity_min, circularity_max, mpp=1.0):
     """
     Calculate ellipse semi-axes (a, b) from volume and height.
     Volume = π * a * b * height
+    
+    Args:
+        volume: Cell volume in um^3
+        height: Cell height in um
+        circularity_min: Minimum circularity
+        circularity_max: Maximum circularity
+        mpp: Microns per pixel - conversion factor from micrometers to pixels
+    
+    Returns:
+        a, b: Ellipse semi-axes in pixels
     """
     circularity = np.random.uniform(circularity_min, circularity_max)
-    area = volume / height
-    a = np.sqrt(area / (np.pi * circularity))
-    b = circularity * a
+    # Volume and height are in micrometers, so area is in um^2
+    area_um2 = volume / height
+    # Calculate axes in micrometers
+    a_um = np.sqrt(area_um2 / (np.pi * circularity))
+    b_um = circularity * a_um
+    # Convert from micrometers to pixels
+    a = a_um / mpp
+    b = b_um / mpp
     return a, b
 
 def get_cell_position(cell_id, hex_coord, id_to_location, locations_data, 
@@ -76,21 +92,28 @@ def get_cell_position(cell_id, hex_coord, id_to_location, locations_data,
 
 def draw_binary_mask_to_array(cells_data, id_to_location, locations_data,
                               hex_size, img_size, center_x, center_y,
-                              circularity_min, circularity_max, overlap_offset_factor):
-    """Draw binary mask directly as numpy array - most efficient."""
+                              circularity_min, circularity_max, overlap_offset_factor,
+                              mpp=1.0):
+    """
+    Draw binary mask directly as numpy array - most efficient.
+    
+    Args:
+        mpp: Microns per pixel - conversion factor from micrometers to pixels
+             (e.g., mpp=0.5 means 1 pixel = 0.5 microns)
+    """
     mask = np.zeros((img_size, img_size), dtype=np.uint8)
     
     for cell in cells_data:
         cell_id = cell['id']
-        volume = cell['volume'] * 0.75
-        height = cell['height']
+        volume = cell['volume'] * 0.06  # in um^3
+        height = cell['height']  # in um
         hex_coord = id_to_location[cell_id]
         
         x, y = get_cell_position(cell_id, hex_coord, id_to_location,
                                 locations_data, hex_size, center_x, center_y,
                                 overlap_offset_factor)
         
-        a, b = calculate_ellipse_axes(volume, height, circularity_min, circularity_max)
+        a, b = calculate_ellipse_axes(volume, height, circularity_min, circularity_max, mpp)
         angle = np.random.uniform(0, 360)
         
         angle_rad = np.radians(angle)
@@ -131,13 +154,13 @@ def process_single_mask(args):
     This function is designed to be called in parallel.
     
     Args:
-        args: Tuple of (folder_path, number, sub_number, hex_size, img_size, 
-                       circularity_min, circularity_max, overlap_offset_factor, random_seed)
+        args: Tuple of (file_paths, output_path, hex_size, img_size, 
+                       circularity_min, circularity_max, overlap_offset_factor, random_seed, mpp)
     
     Returns:
-        Tuple of (number, sub_number, success, error_message)
+        Tuple of (output_path, success, error_message)
     """
-    file_paths, output_path, hex_size, img_size, circularity_min, circularity_max, overlap_offset_factor, random_seed = args
+    file_paths, output_path, hex_size, img_size, circularity_min, circularity_max, overlap_offset_factor, random_seed, mpp = args
     try:
         with open(file_paths[0], 'r') as f:
             cells_data = json.load(f)
@@ -157,7 +180,7 @@ def process_single_mask(args):
         # Generate mask
         mask = draw_binary_mask_to_array(cells_data, id_to_location, locations_data,
                         hex_size, img_size, center_x, center_y,
-                        circularity_min, circularity_max, overlap_offset_factor)
+                        circularity_min, circularity_max, overlap_offset_factor, mpp)
         
         # Save mask
         cv2.imwrite(output_path, mask)
@@ -181,7 +204,7 @@ def main():
                 output_path = folder_path + f'train_{number}_{sub_number}_0000_000000.mask.png'
                 process_args.append((
                     [cell_path, location_path], output_path, HEX_SIZE, IMAGE_SIZE,
-                    CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR, RANDOM_SEED
+                    CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR, RANDOM_SEED, MPP
                 ))
     if 1:
         folder_path = '../ARCADE_OUTPUT/ABC_SMC_RF_N1024_combined_grid_breast_only_mean_2/iter_0/inputs/'
@@ -192,7 +215,7 @@ def main():
             output_path = folder_path + f"mask_pngs/input_{input_id}.mask.png"
             process_args.append((
                 [cell_path, location_path], output_path, HEX_SIZE, IMAGE_SIZE,
-                CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR, RANDOM_SEED
+                CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR, RANDOM_SEED, MPP
             ))
     #process_args = process_args[:1]
     # Process files in parallel
