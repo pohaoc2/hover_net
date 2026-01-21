@@ -6,13 +6,12 @@ from matplotlib.patches import Ellipse
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import os
 
-HEX_SIZE = 30 / 3 **0.5
+HEX_SIZE = 20#30 / 3 **0.5
 IMAGE_SIZE = 540
-CIRCULARITY_MIN = 0.3
-CIRCULARITY_MAX = 0.8
-OVERLAP_OFFSET_FACTOR = 0.8
+CIRCULARITY_MIN = 0.7
+CIRCULARITY_MAX = 1
+OVERLAP_OFFSET_FACTOR = 0.4
 RANDOM_SEED = 42
-DPI = 100
 MPP = 0.42
 
 
@@ -102,10 +101,9 @@ def draw_binary_mask_to_array(cells_data, id_to_location, locations_data,
              (e.g., mpp=0.5 means 1 pixel = 0.5 microns)
     """
     mask = np.zeros((img_size, img_size), dtype=np.uint8)
-    
     for cell in cells_data:
         cell_id = cell['id']
-        volume = cell['volume'] * 0.06  # in um^3
+        volume = cell['volume']  # in um^3
         height = cell['height']  # in um
         hex_coord = id_to_location[cell_id]
         
@@ -133,8 +131,10 @@ def draw_binary_mask_to_array(cells_data, id_to_location, locations_data,
                 dy_rot = -dx * sin_a + dy * cos_a
                 
                 if (dx_rot/a)**2 + (dy_rot/b)**2 <= 1:
-                    mask[py, px] = 255
-    
+                    mask[py, px] = cell_id
+    plt.imshow(mask, cmap='jet')
+    plt.savefig('./mask.png')
+    #asd()
     return mask
 
 def create_id_to_location_mapping(locations_data):
@@ -193,7 +193,7 @@ def process_single_mask(args):
 def main():
     # Load data
     process_args = []
-    if 0:
+    if 1:
         folder_path = 'dataset/training_data/consep/consep/train/540x540_164x164/mask_original/'
         # Prepare arguments for parallel processing
         
@@ -201,12 +201,12 @@ def main():
             for sub_number in range(49):
                 cell_path = folder_path + f'train_{number}_{sub_number}_0000_000000.CELLS.json'
                 location_path = folder_path + f'train_{number}_{sub_number}_0000_000000.LOCATIONS.json'
-                output_path = folder_path + f'train_{number}_{sub_number}_0000_000000.mask.png'
+                output_path = folder_path + f'train_{number}_{sub_number}.mask.png'
                 process_args.append((
                     [cell_path, location_path], output_path, HEX_SIZE, IMAGE_SIZE,
                     CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR, RANDOM_SEED, MPP
                 ))
-    if 1:
+    if 0:
         folder_path = '../ARCADE_OUTPUT/ABC_SMC_RF_N1024_combined_grid_breast_only_mean_2/iter_0/inputs/'
         for input_id in range(1, 1025):
             cell_path = folder_path + f"input_{input_id}/combined_grid_0009_010080.CELLS.json"
@@ -217,7 +217,7 @@ def main():
                 [cell_path, location_path], output_path, HEX_SIZE, IMAGE_SIZE,
                 CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR, RANDOM_SEED, MPP
             ))
-    #process_args = process_args[:1]
+    process_args = process_args[:]
     # Process files in parallel
     max_workers = int(os.cpu_count() / 2) or 4
     print(f"Processing {len(process_args)} mask files in parallel using {max_workers} workers...")

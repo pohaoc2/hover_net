@@ -48,19 +48,22 @@ def extract_centroids_from_patch(npy_path):
     type_map = patch[..., 4].astype(np.int32)
     nucleus_ids = np.unique(inst_map)
     nucleus_ids = nucleus_ids[nucleus_ids != 0]
+    sorted_id_to_original_id = {n_id: o_id for o_id, n_id in zip(nucleus_ids, range(1, len(nucleus_ids) + 1))}
+    nucleus_ids = list(range(1, len(nucleus_ids) + 1))
     cells = []
     mirror_cell_count = 0
     for nucleus_id in nucleus_ids:
-        mask = (inst_map == nucleus_id).astype(np.uint8)
+        mask = (inst_map == sorted_id_to_original_id[nucleus_id]).astype(np.uint8)
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         if len(contours) == 0:
             continue
         
         # Get nucleus type
-        nucleus_pixels = type_map[inst_map == nucleus_id]
+        nucleus_pixels = type_map[inst_map == sorted_id_to_original_id[nucleus_id]]
         nucleus_type = np.bincount(nucleus_pixels).argmax()
-        
+        if nucleus_type == 0:
+            continue
         # Calculate centroid
         try:
             if len(contours) > 1:
@@ -79,6 +82,7 @@ def extract_centroids_from_patch(npy_path):
                         'type': int(nucleus_type),
                         'area': area
                     })
+                    
             else:
                 M = cv2.moments(contours[0])
                 if M["m00"] != 0:
@@ -98,12 +102,9 @@ def extract_centroids_from_patch(npy_path):
         except Exception as e:
             print(f"Error extracting centroids from patch: {e}")
             print(f"Nucleus ID: {nucleus_id}")
-            print(f"Contours: {contours}")
             print(f"Nucleus type: {nucleus_type}")
             print(f"Nucleus pixels: {nucleus_pixels}")
-            print(f"Nucleus mask: {mask}")
-            print(f"Nucleus inst_map: {inst_map}")
-            print(f"Nucleus type_map: {type_map}")
+    cell_ids = [cell['id'] for cell in cells]
     return cells, img
 
 def xy_to_hex(x, y, hex_size, center_x, center_y):
@@ -211,22 +212,21 @@ def convert_to_hexagonal_system(cells, img_shape, hex_size, idx, number, save_di
     
     # Create CELLS data
     cells_data = []
-
+    
     for (u, v, w), cell_list in hex_cells.items():
-        for cell in cell_list:            
+        for cell in cell_list:
             cells_data.append({
                 "id": cell['id'],
                 "parent": 0,
-                "pop": 1,  # Using nucleus type as population
+                "pop": 1,
                 "age": 0,
                 "divisions": 50,
                 "state": type_to_name[cell['type']],
-                "volume": float(cell['area']),  # Using area as volume
-                "height": 8.7,  # Default height (you can adjust this)
+                "volume": float(cell['area']),
+                "height": 8.7,
                 "criticals": [float(cell['area']), 13.78],
                 "cycles": []
             })
-    
 
     # Sort by ID
     cells_data.sort(key=lambda x: x['id'])
@@ -422,12 +422,12 @@ def convert_patch_to_hexagonal(npy_path, hex_size, idx, number, save_dir):
     plt.savefig(f"{save_dir}sandbox_{idx}_{number}_original.png", dpi=100, bbox_inches='tight', pad_inches=0)
     plt.close(fig)
     print(f"Extracted {len(cells)} cells")
-    
+    if len(cells) == 0:
+        return None, None, None
     # Convert to hexagonal system
     locations_data, cells_data, center = convert_to_hexagonal_system(
         cells, img.shape, hex_size, idx, number, save_dir   
     )
-    
     # Visualize
     visualize_hexagonal_conversion(img, cells, hex_size, locations_data, center,
                                    output_path=f"{save_dir}train_{idx}_{number}_hexagonal_visualization.png",
@@ -439,7 +439,7 @@ def save_binary_nuclei_map(npy_path, save_dir, idx, number, with_contour=False):
     patch = np.load(npy_path)
     inst_map = patch[..., 3].astype(np.int32)
     mask = (inst_map > 0).astype(np.uint8)
-    
+    unique_ids = np.unique(inst_map)
     if with_contour:
         # Get unique instance IDs (excluding background)
         instance_ids = np.unique(inst_map)
@@ -452,7 +452,7 @@ def save_binary_nuclei_map(npy_path, save_dir, idx, number, with_contour=False):
             # Draw contours as black (0) to create boundaries between instances
             cv2.drawContours(mask, contours, -1, 0, thickness=1)
     
-    cv2.imwrite(f"{save_dir}binary_nuclei_map_{idx}_{number}.png", mask*255)
+    cv2.imwrite(f"{save_dir}binary_nuclei_map_{idx}_{number}.png", inst_map)
 
 def process_single_patch(args):
     """
@@ -490,7 +490,6 @@ def main():
         return (0, 0)
     
     npy_files.sort(key=extract_sort_key)
-    npy_files = npy_files[:]
     print(f"Found {len(npy_files)} .npy files to process")
 
     hex_size = 20
@@ -540,20 +539,21 @@ def visualize_arcade_simulation(locations_data, hex_size, center_x, center_y, ta
 
 # Example usage
 if __name__ == "__main__":
-    #main()
-    hex_size = 30 / 3 ** 0.5 # microns
-    print(f"Hex size: {hex_size} microns")
-    target_size = 540 # pixels
-    center_x = target_size/2
-    center_y = target_size/2
-    
-    use_white_background = False
-    for input_id in range(1, 2):
-        locations_data_path = f"../ARCADE_OUTPUT/ABC_SMC_RF_N1024_combined_grid_breast_only_mean_2/iter_0/inputs/input_{input_id}/combined_grid_0009_010080.LOCATIONS.json"
-        with open(locations_data_path, 'r') as f:
-            locations_data = json.load(f)
-        max_cells = max(len(location['ids']) for location in locations_data) if locations_data else 1
-        output_path = f"ARCADE_VIZ/{input_id:06d}.png"
+    main()
+    if 0:
+        hex_size = 30 / 3 ** 0.5 # microns
+        print(f"Hex size: {hex_size} microns")
+        target_size = 540 # pixels
+        center_x = target_size/2
+        center_y = target_size/2
         
-        visualize_arcade_simulation(locations_data, hex_size, center_x, center_y, target_size, max_cells, output_path, use_white_background)
+        use_white_background = False
+        for input_id in range(1, 2):
+            locations_data_path = f"../ARCADE_OUTPUT/ABC_SMC_RF_N1024_combined_grid_breast_only_mean_2/iter_0/inputs/input_{input_id}/combined_grid_0009_010080.LOCATIONS.json"
+            with open(locations_data_path, 'r') as f:
+                locations_data = json.load(f)
+            max_cells = max(len(location['ids']) for location in locations_data) if locations_data else 1
+            output_path = f"ARCADE_VIZ/{input_id:06d}.png"
+            
+            visualize_arcade_simulation(locations_data, hex_size, center_x, center_y, target_size, max_cells, output_path, use_white_background)
 
