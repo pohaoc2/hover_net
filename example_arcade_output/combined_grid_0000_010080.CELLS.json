@@ -1,0 +1,1188 @@
+[
+  {
+    "id": 1,
+    "parent": 0,
+    "pop": 1,
+    "age": 9517,
+    "divisions": 0,
+    "state": "NECROTIC",
+    "volume": 3448.6809329883363,
+    "height": 8.7,
+    "criticals": [1920.81, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 2,
+    "parent": 0,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 3,
+    "state": "QUIESCENT",
+    "volume": 3304.6833559144416,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": [
+      "1468",
+      "1602",
+      "1688"
+    ]
+  },
+  {
+    "id": 3,
+    "parent": 0,
+    "pop": 1,
+    "age": 9811,
+    "divisions": 0,
+    "state": "NECROTIC",
+    "volume": 2976.1517595114565,
+    "height": 8.7,
+    "criticals": [1634.94, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 4,
+    "parent": 0,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 0,
+    "state": "QUIESCENT",
+    "volume": 3392.177800626706,
+    "height": 8.7,
+    "criticals": [1971.84, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 5,
+    "parent": 0,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "QUIESCENT",
+    "volume": 2852.4409709639754,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "1291",
+      "1400",
+      "1408",
+      "1584"
+    ]
+  },
+  {
+    "id": 6,
+    "parent": 0,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "QUIESCENT",
+    "volume": 3016.2309201989788,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": [
+      "1350",
+      "1334",
+      "1477",
+      "1794"
+    ]
+  },
+  {
+    "id": 7,
+    "parent": 0,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 3,
+    "state": "QUIESCENT",
+    "volume": 4763.409077104615,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": [
+      "1432",
+      "1577",
+      "1593"
+    ]
+  },
+  {
+    "id": 8,
+    "parent": 5,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 3,
+    "state": "QUIESCENT",
+    "volume": 3924.7309097778143,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "1287",
+      "1451"
+    ]
+  },
+  {
+    "id": 9,
+    "parent": 6,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "QUIESCENT",
+    "volume": 2681.8280517575604,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": [
+      "1469",
+      "1421",
+      "1806"
+    ]
+  },
+  {
+    "id": 10,
+    "parent": 7,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "QUIESCENT",
+    "volume": 3037.1776176212375,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": [
+      "1324",
+      "1578",
+      "1613",
+      "1917"
+    ]
+  },
+  {
+    "id": 11,
+    "parent": 2,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 3,
+    "state": "QUIESCENT",
+    "volume": 3319.491074922839,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": [
+      "1525",
+      "1787"
+    ]
+  },
+  {
+    "id": 12,
+    "parent": 6,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 3,
+    "state": "QUIESCENT",
+    "volume": 3049.9452068665314,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": [
+      "1412"
+    ]
+  },
+  {
+    "id": 13,
+    "parent": 5,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "QUIESCENT",
+    "volume": 2419.1563479164774,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "1392",
+      "1471"
+    ]
+  },
+  {
+    "id": 14,
+    "parent": 8,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 3,
+    "state": "QUIESCENT",
+    "volume": 4115.371155808022,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "1360"
+    ]
+  },
+  {
+    "id": 15,
+    "parent": 10,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "QUIESCENT",
+    "volume": 3515.478054714042,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": [
+      "1401",
+      "1721",
+      "1747"
+    ]
+  },
+  {
+    "id": 16,
+    "parent": 9,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 2755.5675165596153,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": [
+      "1503",
+      "1684",
+      "1860"
+    ]
+  },
+  {
+    "id": 17,
+    "parent": 7,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "QUIESCENT",
+    "volume": 3247.6020932250062,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": [
+      "1673",
+      "1764",
+      "1070"
+    ]
+  },
+  {
+    "id": 18,
+    "parent": 2,
+    "pop": 1,
+    "age": 9897,
+    "divisions": 3,
+    "state": "NECROTIC",
+    "volume": 3318.952932096247,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": [
+      "1638"
+    ]
+  },
+  {
+    "id": 19,
+    "parent": 11,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 3,
+    "state": "QUIESCENT",
+    "volume": 3304.927912228362,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": [
+      "1376"
+    ]
+  },
+  {
+    "id": 20,
+    "parent": 5,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "PROLIFERATIVE",
+    "volume": 4160.2560300224495,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "746"
+    ]
+  },
+  {
+    "id": 21,
+    "parent": 8,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "QUIESCENT",
+    "volume": 3242.8672456169334,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "1333",
+      "1489",
+      "813"
+    ]
+  },
+  {
+    "id": 22,
+    "parent": 6,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "QUIESCENT",
+    "volume": 2976.443328589695,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": [
+      "1590"
+    ]
+  },
+  {
+    "id": 23,
+    "parent": 14,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "QUIESCENT",
+    "volume": 3471.499529372954,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "1399",
+      "1594"
+    ]
+  },
+  {
+    "id": 24,
+    "parent": 13,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "PROLIFERATIVE",
+    "volume": 4161.538821431263,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "830"
+    ]
+  },
+  {
+    "id": 25,
+    "parent": 12,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 3,
+    "state": "QUIESCENT",
+    "volume": 3053.762428911671,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 26,
+    "parent": 9,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "QUIESCENT",
+    "volume": 3261.5289772489864,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": [
+      "1590"
+    ]
+  },
+  {
+    "id": 27,
+    "parent": 15,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "QUIESCENT",
+    "volume": 3202.3201163287968,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": [
+      "1569",
+      "2125"
+    ]
+  },
+  {
+    "id": 28,
+    "parent": 10,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 3,
+    "state": "QUIESCENT",
+    "volume": 3914.655888351701,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 29,
+    "parent": 16,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "QUIESCENT",
+    "volume": 3295.7751481857126,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": [
+      "1773"
+    ]
+  },
+  {
+    "id": 30,
+    "parent": 7,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 3405.7157811453817,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": [
+      "1869",
+      "1135"
+    ]
+  },
+  {
+    "id": 31,
+    "parent": 19,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "MIGRATORY",
+    "volume": 2299.6114254890103,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": [
+      "1531",
+      "1747"
+    ]
+  },
+  {
+    "id": 32,
+    "parent": 2,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "QUIESCENT",
+    "volume": 3524.1165091420385,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": [
+      "1846"
+    ]
+  },
+  {
+    "id": 33,
+    "parent": 17,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "QUIESCENT",
+    "volume": 4173.60979135126,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": [
+      "1858"
+    ]
+  },
+  {
+    "id": 34,
+    "parent": 18,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "QUIESCENT",
+    "volume": 3529.394880704601,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": [
+      "1859"
+    ]
+  },
+  {
+    "id": 35,
+    "parent": 11,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 3,
+    "state": "QUIESCENT",
+    "volume": 3185.5084801630455,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 36,
+    "parent": 21,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "MIGRATORY",
+    "volume": 2754.4922367098247,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "1719"
+    ]
+  },
+  {
+    "id": 37,
+    "parent": 13,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "MIGRATORY",
+    "volume": 2310.471332521615,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "563",
+      "1821"
+    ]
+  },
+  {
+    "id": 38,
+    "parent": 5,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "QUIESCENT",
+    "volume": 2865.8231910464137,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 39,
+    "parent": 23,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "QUIESCENT",
+    "volume": 3211.848983526657,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "1675"
+    ]
+  },
+  {
+    "id": 40,
+    "parent": 22,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "PROLIFERATIVE",
+    "volume": 2387.9634768684823,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": [
+      "1461",
+      "1636"
+    ]
+  },
+  {
+    "id": 41,
+    "parent": 6,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "QUIESCENT",
+    "volume": 3191.628833036415,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 42,
+    "parent": 10,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 4968.352912842306,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": [
+      "1781"
+    ]
+  },
+  {
+    "id": 43,
+    "parent": 26,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 3296.1290094987044,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": [
+      "1806"
+    ]
+  },
+  {
+    "id": 44,
+    "parent": 27,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "QUIESCENT",
+    "volume": 3526.1940991309634,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": [
+      "1708"
+    ]
+  },
+  {
+    "id": 45,
+    "parent": 15,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 4968.633546489072,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": [
+      "1877"
+    ]
+  },
+  {
+    "id": 46,
+    "parent": 9,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "QUIESCENT",
+    "volume": 3239.0623952607416,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 47,
+    "parent": 16,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "PROLIFERATIVE",
+    "volume": 3296.024727743881,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 48,
+    "parent": 31,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "QUIESCENT",
+    "volume": 2669.696478830074,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": [
+      "1991"
+    ]
+  },
+  {
+    "id": 49,
+    "parent": 29,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "QUIESCENT",
+    "volume": 3265.1514647573804,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 50,
+    "parent": 17,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 3948.0438195865204,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": [
+      "2042"
+    ]
+  },
+  {
+    "id": 51,
+    "parent": 30,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 4210.762861776311,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": [
+      "1742"
+    ]
+  },
+  {
+    "id": 52,
+    "parent": 32,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 2755.2924892759593,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": [
+      "1880"
+    ]
+  },
+  {
+    "id": 53,
+    "parent": 33,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "MIGRATORY",
+    "volume": 3566.9627426667425,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": [
+      "2006"
+    ]
+  },
+  {
+    "id": 54,
+    "parent": 34,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 1833.6607663731186,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": [
+      "877"
+    ]
+  },
+  {
+    "id": 55,
+    "parent": 21,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "PROLIFERATIVE",
+    "volume": 3447.4739024433006,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "1722"
+    ]
+  },
+  {
+    "id": 56,
+    "parent": 23,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "PROLIFERATIVE",
+    "volume": 2721.6459857037476,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "487"
+    ]
+  },
+  {
+    "id": 57,
+    "parent": 36,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "PROLIFERATIVE",
+    "volume": 1996.3591141852369,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "518"
+    ]
+  },
+  {
+    "id": 58,
+    "parent": 40,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "PROLIFERATIVE",
+    "volume": 2119.5892887181267,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": [
+      "1680"
+    ]
+  },
+  {
+    "id": 59,
+    "parent": 39,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "PROLIFERATIVE",
+    "volume": 2360.959330730289,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": [
+      "808"
+    ]
+  },
+  {
+    "id": 60,
+    "parent": 15,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "PROLIFERATIVE",
+    "volume": 2554.04987603096,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": [
+      "1943"
+    ]
+  },
+  {
+    "id": 61,
+    "parent": 44,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 4970.071471695787,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 62,
+    "parent": 42,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 4969.563741243041,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 63,
+    "parent": 10,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "QUIESCENT",
+    "volume": 3745.2137818040114,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 64,
+    "parent": 43,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 3296.6743801242337,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 65,
+    "parent": 31,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 3529.4818630254854,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 66,
+    "parent": 37,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 4160.919103114376,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 67,
+    "parent": 16,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "QUIESCENT",
+    "volume": 1697.0763882124527,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 68,
+    "parent": 45,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 4969.122870065688,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 69,
+    "parent": 24,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "MIGRATORY",
+    "volume": 3229.6304823296214,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 70,
+    "parent": 20,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 4,
+    "state": "PROLIFERATIVE",
+    "volume": 4162.1817553169185,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 71,
+    "parent": 27,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "QUIESCENT",
+    "volume": 3579.6218760503975,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 72,
+    "parent": 48,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 2628.214538216195,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 73,
+    "parent": 51,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 4718.282584131897,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 74,
+    "parent": 52,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 2974.6967670505005,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 75,
+    "parent": 50,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 4075.6516060441763,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 76,
+    "parent": 17,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 3846.879577053627,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 77,
+    "parent": 53,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "QUIESCENT",
+    "volume": 2742.443746874781,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 78,
+    "parent": 55,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "PROLIFERATIVE",
+    "volume": 3011.4987810096463,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 79,
+    "parent": 21,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "PROLIFERATIVE",
+    "volume": 3000.9660525499357,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 80,
+    "parent": 30,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "PROLIFERATIVE",
+    "volume": 3402.3161736693937,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 81,
+    "parent": 40,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "PROLIFERATIVE",
+    "volume": 2396.069884868365,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 82,
+    "parent": 58,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "PROLIFERATIVE",
+    "volume": 2300.066783626527,
+    "height": 8.7,
+    "criticals": [1647.52, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 83,
+    "parent": 56,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "PROLIFERATIVE",
+    "volume": 2187.9091514690367,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 84,
+    "parent": 59,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "PROLIFERATIVE",
+    "volume": 2485.136754737317,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 85,
+    "parent": 54,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 5,
+    "state": "MIGRATORY",
+    "volume": 1858.767682153696,
+    "height": 8.7,
+    "criticals": [1764.58, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 86,
+    "parent": 37,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "MIGRATORY",
+    "volume": 1955.5704859250004,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 87,
+    "parent": 57,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "MIGRATORY",
+    "volume": 2237.152692283859,
+    "height": 8.7,
+    "criticals": [2079.96, 13.78],
+    "cycles": []
+  },
+  {
+    "id": 88,
+    "parent": 60,
+    "pop": 1,
+    "age": 10080,
+    "divisions": 6,
+    "state": "MIGRATORY",
+    "volume": 2426.772561207582,
+    "height": 8.7,
+    "criticals": [2483.85, 13.78],
+    "cycles": []
+  }
+]

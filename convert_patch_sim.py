@@ -222,7 +222,7 @@ def convert_to_hexagonal_system(cells, img_shape, hex_size, idx, number, save_di
                 "age": 0,
                 "divisions": 50,
                 "state": type_to_name[cell['type']],
-                "volume": float(cell['area']),
+                "volume": float(cell['area'])*8.7,
                 "height": 8.7,
                 "criticals": [float(cell['area']), 13.78],
                 "cycles": []
@@ -498,7 +498,7 @@ def main():
     
     # Prepare arguments for parallel processing
     process_args = []
-    for npy_path in npy_files[:]:
+    for npy_path in npy_files[:1]:
         filename = os.path.basename(npy_path)
         match = re.search(r'train_(\d+)_(\d+)\.npy', filename)
         if match:

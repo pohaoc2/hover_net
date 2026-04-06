@@ -5,15 +5,19 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import os
+from PIL import Image
+from scipy import ndimage
+from skimage import measure, draw
+
 
 HEX_SIZE = 20#30 / 3 **0.5
 IMAGE_SIZE = 540
-CIRCULARITY_MIN = 0.7
+CIRCULARITY_MIN = 1
 CIRCULARITY_MAX = 1
-OVERLAP_OFFSET_FACTOR = 0.4
+OVERLAP_OFFSET_FACTOR = 0.8
 RANDOM_SEED = 42
 MPP = 0.42
-
+VOLUME_MIN = 1
 
 def hex_to_xy(u, v, w, hex_size, center_x, center_y):
     """Convert hexagonal (cube) coordinates to Cartesian coordinates."""
@@ -91,7 +95,7 @@ def get_cell_position(cell_id, hex_coord, id_to_location, locations_data,
 
 def draw_binary_mask_to_array(cells_data, id_to_location, locations_data,
                               hex_size, img_size, center_x, center_y,
-                              circularity_min, circularity_max, overlap_offset_factor,
+                              circularity_min, circularity_max, overlap_offset_factor, volume_min=1000,
                               mpp=1.0):
     """
     Draw binary mask directly as numpy array - most efficient.
@@ -103,10 +107,11 @@ def draw_binary_mask_to_array(cells_data, id_to_location, locations_data,
     mask = np.zeros((img_size, img_size), dtype=np.uint8)
     for cell in cells_data:
         cell_id = cell['id']
-        volume = cell['volume']  # in um^3
+        volume = cell['volume'] *1.3  # in um^3
         height = cell['height']  # in um
         hex_coord = id_to_location[cell_id]
-        
+        if volume < volume_min:
+            continue
         x, y = get_cell_position(cell_id, hex_coord, id_to_location,
                                 locations_data, hex_size, center_x, center_y,
                                 overlap_offset_factor)
@@ -160,7 +165,8 @@ def process_single_mask(args):
     Returns:
         Tuple of (output_path, success, error_message)
     """
-    file_paths, output_path, hex_size, img_size, circularity_min, circularity_max, overlap_offset_factor, random_seed, mpp = args
+    file_paths, output_path, hex_size, img_size, circularity_min, circularity_max, overlap_offset_factor, random_seed, volume_min, mpp = args
+    print(f"Volume min: {volume_min}, MPP: {mpp}")
     try:
         with open(file_paths[0], 'r') as f:
             cells_data = json.load(f)
@@ -180,7 +186,7 @@ def process_single_mask(args):
         # Generate mask
         mask = draw_binary_mask_to_array(cells_data, id_to_location, locations_data,
                         hex_size, img_size, center_x, center_y,
-                        circularity_min, circularity_max, overlap_offset_factor, mpp)
+                        circularity_min, circularity_max, overlap_offset_factor, volume_min=volume_min, mpp=mpp)
         
         # Save mask
         cv2.imwrite(output_path, mask)
@@ -204,7 +210,7 @@ def main():
                 output_path = folder_path + f'train_{number}_{sub_number}.mask.png'
                 process_args.append((
                     [cell_path, location_path], output_path, HEX_SIZE, IMAGE_SIZE,
-                    CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR, RANDOM_SEED, MPP
+                    CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR, RANDOM_SEED, VOLUME_MIN, MPP
                 ))
     if 0:
         folder_path = '../ARCADE_OUTPUT/ABC_SMC_RF_N1024_combined_grid_breast_only_mean_2/iter_0/inputs/'
@@ -215,9 +221,9 @@ def main():
             output_path = folder_path + f"mask_pngs/input_{input_id}.mask.png"
             process_args.append((
                 [cell_path, location_path], output_path, HEX_SIZE, IMAGE_SIZE,
-                CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR, RANDOM_SEED, MPP
+                CIRCULARITY_MIN, CIRCULARITY_MAX, OVERLAP_OFFSET_FACTOR, RANDOM_SEED, VOLUME_MIN, MPP
             ))
-    process_args = process_args[:]
+    process_args = process_args[:10]
     # Process files in parallel
     max_workers = int(os.cpu_count() / 2) or 4
     print(f"Processing {len(process_args)} mask files in parallel using {max_workers} workers...")
@@ -244,5 +250,81 @@ def main():
         print(f"Failed: {failed}/{len(process_args)}")
 
 
+def nuclei_to_circular_cells(
+    nuclei_mask,
+    height=8.7,
+    circularity_min=0.8,
+    circularity_max=1.0,
+    mpp=1.0,
+    background_value=0
+):
+    """
+    Convert nuclei segmentation mask to circular cell segmentation.
+    
+    Args:
+        nuclei_mask: 2D array where each nucleus has a unique integer ID
+        height: Cell height in micrometers (for volume calculation)
+        circularity_min: Minimum circularity for ellipse generation
+        circularity_max: Maximum circularity for ellipse generation
+        mpp: Microns per pixel conversion factor
+        background_value: Value representing background (default 0)
+    
+    Returns:
+        circular_mask: 2D array with circular cells, same IDs as input
+    """
+    # Initialize output mask
+    circular_mask = np.zeros_like(nuclei_mask)
+    
+    # Get unique nucleus IDs (excluding background)
+    nucleus_ids = np.unique(nuclei_mask)
+    nucleus_ids = nucleus_ids[nucleus_ids != background_value]
+    
+    for nucleus_id in nucleus_ids:
+        # Create binary mask for this nucleus
+        nucleus_binary = (nuclei_mask == nucleus_id)
+        
+        # Calculate centroid and area in pixels
+        props = measure.regionprops(nucleus_binary.astype(int))[0]
+        centroid_y, centroid_x = props.centroid
+        area_pixels = props.area
+        
+        # Convert area from pixels to um^2
+        area_um2 = area_pixels * (mpp ** 2)
+        
+        # Calculate volume in um^3 (assuming circular cross-section)
+        volume_um3 = area_um2 * height
+        
+        # Calculate ellipse axes using your function
+        a, b = calculate_ellipse_axes(
+            volume_um3, 
+            height, 
+            circularity_min, 
+            circularity_max, 
+            mpp
+        )
+        
+        # For circular cells, use the mean of a and b as radius
+        radius = (a + b) / 2.0
+        
+        # Draw circle on the mask
+        rr, cc = draw.disk(
+            (centroid_y, centroid_x), 
+            radius, 
+            shape=circular_mask.shape
+        )
+        
+        # Assign the nucleus ID to the circular region
+        circular_mask[rr, cc] = nucleus_id
+    
+    return circular_mask
+
 if __name__ == '__main__':
     main()
+    if 0:
+        guidance_scale = 7
+        for batch_id in range(28):
+            for sample_id in range(8):
+                pred_mask_path = f"../share_space/results/tmp/cellpose_w{guidance_scale}/{batch_id}_{sample_id}_generated_masks.png"
+                pred_mask = np.array(Image.open(pred_mask_path))
+                circular_mask = nuclei_to_circular_cells(pred_mask, height=8.7, circularity_min=CIRCULARITY_MIN, circularity_max=CIRCULARITY_MAX, mpp=MPP, background_value=0)
+                cv2.imwrite(f"../share_space/results/tmp/cellpose_w{guidance_scale}/{batch_id}_{sample_id}_generated_masks_circular.png", circular_mask)

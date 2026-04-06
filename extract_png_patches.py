@@ -10,8 +10,6 @@ WIN_SIZE = [540, 540]
 STEP_SIZE = [164, 164]
 EXTRACT_TYPE = "mirror"
 NUM_WORKERS = os.cpu_count() or 4
-original_image_width = 2048 # in pixels
-original_image_height = 1536 # in pixels
 micron_per_pixel = 0.42
 DESIRED_MPP = 0.5  # Set to None to use original resolution, or specify desired microns per pixel (e.g., 0.42)
 

@@ -8,7 +8,8 @@ import glob
 import os
 import tqdm
 import pathlib
-
+import matplotlib.pyplot as plt
+from PIL import Image
 import numpy as np
 
 from misc.patch_extractor import PatchExtractor
@@ -91,6 +92,10 @@ if __name__ == "__main__":
             )
 
             for idx, patch in enumerate(sub_patches):
+                print(patch.shape)
+                image = Image.fromarray(patch[..., :3].astype(np.uint8), mode="RGB")
+                image.save(f"{out_dir}/{base_name}_{idx:03d}.png")
+                asd()
                 np.save("{0}/{1}_{2:03d}.npy".format(out_dir, base_name, idx), patch)
                 pbar.update()
             pbar.close()
